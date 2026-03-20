@@ -24,8 +24,8 @@ This repository contains a web scraping project for collecting and analyzing job
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/AhmadMunirSheikh/Assignment1-clean.git
-   cd Assignment1-clean
+   git clone https://github.com/ahmadmunirsheikh13/Assignment1.git
+   cd Assignment1
    ```
 
 2. Install dependencies:
