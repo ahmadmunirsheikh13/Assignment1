@@ -37,25 +37,14 @@ logger = logging.getLogger(__name__)
 
 # Career pages from real companies using each platform
 GREENHOUSE_PAGES = [
-    "https://boards.greenhouse.io/google",
-    "https://boards.greenhouse.io/meta",
-    "https://boards.greenhouse.io/microsoft",
     "https://boards.greenhouse.io/stripe", 
-    "https://boards.greenhouse.io/epic",
 ]
 
 LEVER_PAGES = [
-    "https://jobs.lever.co/amazon",
-    "https://jobs.lever.co/netflix",
     "https://jobs.lever.co/spotify",
-    "https://jobs.lever.co/uber",
-    "https://jobs.lever.co/databricks",
 ]
 
 ASHBY_PAGES = [
-    "https://jobs.ashbyhq.com/stripe",
-    "https://jobs.ashbyhq.com/shopify",
-    "https://jobs.ashbyhq.com/coinbase",
     "https://jobs.ashbyhq.com/retool",
 ]
 

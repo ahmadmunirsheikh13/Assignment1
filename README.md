@@ -136,12 +136,27 @@ The final `jobs.csv` includes:
 
 ## 🔍 Analysis Outputs
 
-Key metrics computed:
-- **Skill Demand**: Top 20 skills with frequency counts
-- **Geographic Distribution**: Job openings by city
-- **Company Activity**: Companies with most listings
-- **Experience Levels**: Breakdown of junior/mid/senior roles
-- **Title Analysis**: Most common job titles with counts
+Latest analysis (2026-03-21) across 20 job listings:
+
+### Top In-Demand Skills
+1. **Python** - 17 positions
+2. **SQL** - 8 positions  
+3. **Java** - 7 positions
+4. **Go** - 5 positions
+5. **Databases** - 5 positions
+
+### Geographic Distribution
+- **San Francisco CA**: 8 jobs (40%)
+- **Mountain View CA**: 2 jobs
+- **Menlo Park CA**: 2 jobs
+- **Other locations**: 8 jobs
+
+### Top Hiring Companies
+1. **Stripe** - 3 openings
+2. **Google, Meta, Netflix** - 2 openings each
+
+### Full Analysis Report
+See [docs/analysis_report.md](docs/analysis_report.md) for comprehensive insights.
 
 ## 📝 Git Workflow (Professional)
 
