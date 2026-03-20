@@ -1,26 +1,51 @@
 import scrapy
 import csv
-import json
+import os
 from jobs.items import JobItem
 
 class JobSpider(scrapy.Spider):
     name = 'job_spider'
     
     def start_requests(self):
-        # Read job URLs from CSV
-        print("Starting to read job URLs from CSV...")
-        with open('../data/raw/job_links.csv', 'r') as f:
-            reader = csv.DictReader(f)
-            urls = []
-            for row in reader:
-                urls.append(row['job_url'])
-            print(f"Found {len(urls)} URLs in CSV")
-            for url in urls[:3]:  # Print first 3 URLs
-                print(f"URL: {url}")
-                yield scrapy.Request(url=url, callback=self.parse_job)
+        # Read job URLs from CSV - use relative path from project root
+        print("\n" + "="*60)
+        print("Starting Job Spider - Reading job URLs from CSV...")
+        print("="*60)
+        
+        # Construct path relative to scrapy_project directory
+        csv_path = os.path.join(os.path.dirname(__file__), '../../data/raw/job_links.csv')
+        csv_path = os.path.abspath(csv_path)
+        
+        print(f"CSV Path: {csv_path}")
+        
+        if not os.path.exists(csv_path):
+            print(f"ERROR: CSV file not found at {csv_path}")
+            return
+        
+        urls = []
+        try:
+            with open(csv_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    if 'job_url' in row and row['job_url'].strip():
+                        urls.append(row['job_url'].strip())
+            
+            print(f"✓ Found {len(urls)} URLs in CSV")
+            
+            for idx, url in enumerate(urls, 1):
+                print(f"  [{idx}] Queuing: {url}")
+                yield scrapy.Request(url=url, callback=self.parse_job, errback=self.error_handler)
+        except Exception as e:
+            print(f"ERROR reading CSV: {e}")
+    
+    def error_handler(self, failure):
+        """Handle request errors"""
+        print(f"ERROR: Failed to fetch {failure.request.url}: {failure.value}")
     
     def parse_job(self, response):
-        print(f"Processing URL: {response.url}")
+        """Parse job posting and extract all field information"""
+        print(f"\n>>> Processing URL: {response.url}")
+        
         item = JobItem()
         item['job_url'] = response.url
         
@@ -42,14 +67,13 @@ class JobSpider(scrapy.Spider):
         else:
             item['job_title'] = 'Unknown Title'
         
-        print(f"Extracted title: {item['job_title']}")
-        
         # If company not extracted from title, try other selectors
         if not item.get('company_name'):
             company_selectors = [
                 'meta[property="og:site_name"]::attr(content)',
                 '.company::text',
-                '.employer::text'
+                '.employer::text',
+                '[data-company]::text'
             ]
             item['company_name'] = self.extract_first_text(response, company_selectors) or 'Unknown Company'
         
@@ -127,8 +151,22 @@ class JobSpider(scrapy.Spider):
         ]
         item['salary'] = self.extract_first_text(response, salary_selectors) or 'Not specified'
         
-        print(f"Final item: title={item['job_title']}, company={item['company_name']}")
-        yield item
+        # FILTER: Only yield jobs related to "Data Science" or "Machine Learning"
+        job_title_lower = item['job_title'].lower()
+        job_desc_lower = item['job_description'].lower()
+        skills_lower = item['required_skills'].lower()
+        
+        keywords = ['data science', 'machine learning', 'ml', 'data scientist', 'ml engineer']
+        is_relevant = any(keyword in job_title_lower or keyword in job_desc_lower or keyword in skills_lower 
+                         for keyword in keywords)
+        
+        if is_relevant:
+            print(f"  ✓ Title: {item['job_title']}")
+            print(f"  ✓ Company: {item['company_name']}")
+            print(f"  ✓ Relevant job detected and will be saved")
+            yield item
+        else:
+            print(f"  ✗ Filtered out: {item['job_title']} (not Data Science/ML related)")
     
     def extract_first_text(self, response, selectors):
         """Extract text from first matching selector"""

@@ -3,21 +3,56 @@ import os
 
 class JobsPipeline:
     def open_spider(self, spider):
-        os.makedirs('../../data/final', exist_ok=True)
-        self.file = open('../../data/final/jobs.csv', 'w', newline='', encoding='utf-8')
+        """Initialize pipeline - create output directory and CSV file with headers"""
+        print("\n" + "="*60)
+        print("JobsPipeline: Initializing...")
+        print("="*60)
+        
+        # Calculate path relative to project root (scrapy_project directory)
+        base_dir = os.path.join(os.path.dirname(__file__), '../../data/final')
+        base_dir = os.path.abspath(base_dir)
+        
+        os.makedirs(base_dir, exist_ok=True)
+        self.output_file = os.path.join(base_dir, 'jobs.csv')
+        
+        print(f"Output directory: {base_dir}")
+        print(f"Output file: {self.output_file}")
+        
+        self.file = open(self.output_file, 'w', newline='', encoding='utf-8')
         self.writer = csv.writer(self.file)
-        # Write header
-        self.writer.writerow([
+        
+        # Write header row
+        headers = [
             'job_title', 'company_name', 'location', 'department', 
             'employment_type', 'posted_date', 'job_url', 'job_description', 
             'required_skills', 'experience', 'salary'
-        ])
+        ]
+        self.writer.writerow(headers)
+        self.file.flush()
+        
+        print(f"✓ CSV header written")
+        print(f"✓ Pipeline ready to process items")
+        print("="*60 + "\n")
+        
+        self.item_count = 0
     
     def close_spider(self, spider):
+        """Close the pipeline - finalize CSV file"""
         self.file.close()
+        print("\n" + "="*60)
+        print(f"JobsPipeline: Closed")
+        print(f"✓ Total items saved: {self.item_count}")
+        print(f"✓ Output file: {self.output_file}")
+        print("="*60 + "\n")
     
     def process_item(self, item, spider):
-        print(f"Pipeline processing item: {item['job_title']}")
+        """Process each scraped item - write to CSV"""
+        self.item_count += 1
+        print(f"\n[Item #{self.item_count}] Pipeline processing:")
+        print(f"  Title: {item.get('job_title', 'N/A')}")
+        print(f"  Company: {item.get('company_name', 'N/A')}")
+        print(f"  Location: {item.get('location', 'N/A')}")
+        
         self.writer.writerow([
             item.get('job_title', ''),
             item.get('company_name', ''),
@@ -31,4 +66,9 @@ class JobsPipeline:
             item.get('experience', ''),
             item.get('salary', '')
         ])
+        
+        # Flush to ensure data is written immediately
+        self.file.flush()
+        print(f"  ✓ Written to {self.output_file}")
+        
         return item
