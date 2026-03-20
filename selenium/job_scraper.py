@@ -10,21 +10,9 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # List of career pages to scrape - using real company career pages (expanded for 100+ jobs)
 CAREER_PAGES = [
-    "https://boards.greenhouse.io/google",
-    "https://boards.greenhouse.io/meta",
-    "https://boards.greenhouse.io/microsoft",
-    "https://boards.greenhouse.io/apple",
-    "https://boards.greenhouse.io/amazon",
-    "https://boards.greenhouse.io/netflix",
-    "https://jobs.lever.co/amazon",
-    "https://jobs.lever.co/netflix",
+    "https://jobs.ashbyhq.com/openai",
     "https://jobs.lever.co/spotify",
-    "https://jobs.lever.co/uber",
-    "https://jobs.lever.co/airbnb",
-    "https://jobs.ashbyhq.com/stripe",
-    "https://jobs.ashbyhq.com/airbnb",
-    "https://jobs.ashbyhq.com/coinbase",
-    "https://jobs.ashbyhq.com/shopify"
+     "https://stripe.com/jobs/search",
 ]
 
 # Keywords to filter jobs (expanded for comprehensive collection)
