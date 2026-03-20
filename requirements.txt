@@ -9,3 +9,4 @@ lxml==4.9.3
 cssselect==1.2.0
 beautifulsoup4==4.12.2
 Pillow==10.0.1
+webdriver-manager==4.0.1
