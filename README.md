@@ -42,20 +42,20 @@ This repository contains a web scraping project for collecting and analyzing job
    python selenium/scrape_jobs.py
    ```
 
-2. Run Scrapy spider to extract job details:
+3. Run Scrapy spider to extract job details:
    ```bash
    cd scrapy_project
    scrapy crawl job_spider
    ```
 
-3. Run analysis script:
+4. Run analysis script:
    ```bash
    python analysis/analyze_jobs.py
    ```
 
 ## Results
 
-See `docs/report.md` for detailed analysis results.
+See `docs/report.md` for detailed analysis results. The final dataset is saved as `data/final/jobs.csv`.
 
 ## Git Workflow
 
