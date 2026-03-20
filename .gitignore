@@ -23,5 +23,6 @@ coverage.xml
 node_modules/
 selenium/chromedriver
 selenium/geckodriver
-# data/  # Commented out to include data files for assignment
+/data/raw/
+.env
 *.tmp

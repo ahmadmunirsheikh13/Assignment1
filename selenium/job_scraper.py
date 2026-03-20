@@ -5,6 +5,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # List of career pages to scrape - using real company career pages (expanded for 100+ jobs)
 CAREER_PAGES = [
@@ -57,12 +59,16 @@ def search_jobs_greenhouse(driver, url):
     try:
         print(f"Visiting Greenhouse page: {url}")
         driver.get(url)
-        time.sleep(3)
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
 
-        # Wait for page to load and try to find job listings
+        # Wait for job items to appear (or any hint on the page)
+        print("Looking for job listings...")
         try:
-            # First, let's see what we can find on the page
-            print("Looking for job listings...")
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.opening, .job-post, [data-jobid]'))
+            )
+        except Exception:
+            pass
 
             # Try multiple approaches to find jobs
             job_elements = []
@@ -150,11 +156,16 @@ def search_jobs_lever(driver, url):
     try:
         print(f"Visiting Lever page: {url}")
         driver.get(url)
-        time.sleep(3)
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
 
-        # Wait for page to load and try to find job listings
+        # Wait for job listings blocks to appear
+        print("Looking for job listings...")
         try:
-            print("Looking for job listings...")
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.posting, .posting-title, a[href*="/apply/"]'))
+            )
+        except Exception:
+            pass
 
             # Try multiple approaches to find jobs
             job_elements = []
@@ -238,11 +249,16 @@ def search_jobs_ashby(driver, url):
     try:
         print(f"Visiting Ashby page: {url}")
         driver.get(url)
-        time.sleep(3)
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
 
-        # Wait for page to load and try to find job listings
+        # Wait for job entries to appear
+        print("Looking for job listings...")
         try:
-            print("Looking for job listings...")
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.job-post, .posting, [data-job]'))
+            )
+        except Exception:
+            pass
 
             # Try multiple approaches to find jobs
             job_elements = []

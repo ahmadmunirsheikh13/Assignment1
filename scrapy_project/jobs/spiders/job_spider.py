@@ -133,8 +133,15 @@ class JobSpider(scrapy.Spider):
         skills = []
         for selector in skill_selectors:
             skills.extend(response.css(selector).getall())
-        item['required_skills'] = ', '.join(set(skills)) if skills else 'Not specified'
-        
+
+        parsed_skills = self.parse_skills_from_description(item['job_description'])
+        if parsed_skills:
+            skills.extend(parsed_skills)
+
+        # Normalize and unique skills
+        skills = [s.strip() for s in skills if s and s.strip()]
+        item['required_skills'] = ', '.join(sorted(set(skills))) if skills else 'Not specified'
+
         # Experience
         exp_selectors = [
             '.experience::text',
@@ -178,12 +185,36 @@ class JobSpider(scrapy.Spider):
     
     def extract_description(self, response, selectors):
         """Extract and clean job description"""
+        desc_text = ''
         for selector in selectors:
             desc_parts = response.css(f'{selector} p::text').getall()
             if desc_parts:
-                return ' '.join(desc_parts).strip()
+                desc_text = ' '.join(desc_parts).strip()
+                break
             # Fallback to direct text
             desc = response.css(f'{selector}::text').get()
             if desc:
-                return desc.strip()
+                desc_text = desc.strip()
+                break
+        return desc_text
+
+    def parse_skills_from_description(self, description):
+        """Parse required skills based on keywords in the job description"""
+        if not description:
+            return []
+
+        keywords = [
+            'python', 'sql', 'r', 'tensorflow', 'pytorch', 'scikit-learn', 'keras',
+            'spark', 'hadoop', 'airflow', 'docker', 'kubernetes', 'pandas', 'numpy',
+            'matplotlib', 'seaborn', 'nlp', 'computer vision', 'aws', 'gcp', 'azure'
+        ]
+
+        found = set()
+        desc_lower = description.lower()
+        for key in keywords:
+            if key in desc_lower:
+                found.add(key)
+
+        return list(found)
+
         return ''
