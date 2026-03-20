@@ -8,63 +8,77 @@ class JobSpider(scrapy.Spider):
     
     def start_requests(self):
         # Read job URLs from CSV
-        with open('../../data/raw/job_links.csv', 'r') as f:
+        print("Starting to read job URLs from CSV...")
+        with open('../data/raw/job_links.csv', 'r') as f:
             reader = csv.DictReader(f)
+            urls = []
             for row in reader:
-                yield scrapy.Request(url=row['job_url'], callback=self.parse_job)
+                urls.append(row['job_url'])
+            print(f"Found {len(urls)} URLs in CSV")
+            for url in urls[:3]:  # Print first 3 URLs
+                print(f"URL: {url}")
+                yield scrapy.Request(url=url, callback=self.parse_job)
     
     def parse_job(self, response):
+        print(f"Processing URL: {response.url}")
         item = JobItem()
         item['job_url'] = response.url
         
-        # Enhanced selectors for different platforms
-        # Job title - try multiple selectors
-        title_selectors = [
-            'h1::text',
-            '.job-title::text',
-            '.posting-title::text',
-            'h1.job-title::text',
-            '.job-header h1::text'
-        ]
-        item['job_title'] = self.extract_first_text(response, title_selectors)
+        # Extract job title from page title (works for most job boards)
+        title = response.css('title::text').get()
+        if title:
+            # Clean up title - remove company name prefix
+            title = title.strip()
+            if ' - ' in title:
+                parts = title.split(' - ')
+                if len(parts) >= 2:
+                    # Usually format is "Company - Job Title" or "Job Title - Company"
+                    item['job_title'] = parts[1] if len(parts[1]) > len(parts[0]) else parts[0]
+                    item['company_name'] = parts[0] if len(parts[1]) > len(parts[0]) else parts[1]
+                else:
+                    item['job_title'] = title
+            else:
+                item['job_title'] = title
+        else:
+            item['job_title'] = 'Unknown Title'
         
-        # Company name
-        company_selectors = [
-            '.company-name::text',
-            '.company::text',
-            'meta[property="og:site_name"]::attr(content)',
-            '.employer::text',
-            '.company-info::text'
-        ]
-        item['company_name'] = self.extract_first_text(response, company_selectors)
+        print(f"Extracted title: {item['job_title']}")
         
-        # Location
+        # If company not extracted from title, try other selectors
+        if not item.get('company_name'):
+            company_selectors = [
+                'meta[property="og:site_name"]::attr(content)',
+                '.company::text',
+                '.employer::text'
+            ]
+            item['company_name'] = self.extract_first_text(response, company_selectors) or 'Unknown Company'
+        
+        # Location - try various selectors
         location_selectors = [
             '.location::text',
-            '[data-location]::text',
             '.job-location::text',
-            '.location-info::text',
-            '.workplace::text'
+            '.workplace::text',
+            '[data-location]::text'
         ]
-        item['location'] = self.extract_first_text(response, location_selectors)
+        item['location'] = self.extract_first_text(response, location_selectors) or 'Not specified'
         
-        # Department
+        # Department - try various selectors
         dept_selectors = [
             '.department::text',
             '.team::text',
             '.group::text',
             '[data-department]::text'
         ]
-        item['department'] = self.extract_first_text(response, dept_selectors)
+        item['department'] = self.extract_first_text(response, dept_selectors) or 'Not specified'
         
         # Employment type
         type_selectors = [
             '.employment-type::text',
-            '[data-employment-type]::text',
             '.job-type::text',
-            '.commitment::text'
+            '.commitment::text',
+            '[data-employment-type]::text'
         ]
-        item['employment_type'] = self.extract_first_text(response, type_selectors)
+        item['employment_type'] = self.extract_first_text(response, type_selectors) or 'Full-time'
         
         # Posted date
         date_selectors = [
@@ -73,45 +87,47 @@ class JobSpider(scrapy.Spider):
             '.date::text',
             '[data-date]::text'
         ]
-        item['posted_date'] = self.extract_first_text(response, date_selectors)
+        item['posted_date'] = self.extract_first_text(response, date_selectors) or 'Not specified'
         
-        # Job description
+        # Job description - try to extract from various containers
         desc_selectors = [
             '.job-description',
             '.description',
             '.job-detail',
-            '.posting-description'
+            '.posting-description',
+            '.content'
         ]
-        item['job_description'] = self.extract_description(response, desc_selectors)
+        item['job_description'] = self.extract_description(response, desc_selectors) or 'Description not available'
         
-        # Required skills
+        # Required skills - look for lists or specific sections
         skill_selectors = [
             '.skills li::text',
-            '[data-skills] li::text',
             '.requirements li::text',
-            '.qualifications li::text'
+            '.qualifications li::text',
+            '[data-skills] li::text'
         ]
         skills = []
         for selector in skill_selectors:
             skills.extend(response.css(selector).getall())
-        item['required_skills'] = ', '.join(set(skills))  # Remove duplicates
+        item['required_skills'] = ', '.join(set(skills)) if skills else 'Not specified'
         
-        # Experience (optional)
+        # Experience
         exp_selectors = [
             '.experience::text',
             '.experience-level::text',
             '[data-experience]::text'
         ]
-        item['experience'] = self.extract_first_text(response, exp_selectors)
+        item['experience'] = self.extract_first_text(response, exp_selectors) or 'Not specified'
         
-        # Salary (optional)
+        # Salary
         salary_selectors = [
             '.salary::text',
             '.compensation::text',
             '[data-salary]::text'
         ]
-        item['salary'] = self.extract_first_text(response, salary_selectors)
+        item['salary'] = self.extract_first_text(response, salary_selectors) or 'Not specified'
         
+        print(f"Final item: title={item['job_title']}, company={item['company_name']}")
         yield item
     
     def extract_first_text(self, response, selectors):

@@ -5,10 +5,8 @@ from collections import Counter
 import re
 
 def load_jobs_data():
-    """Load jobs data from JSON file"""
-    with open('data/final/jobs.json', 'r') as f:
-        data = json.load(f)
-    return pd.DataFrame(data)
+    """Load jobs data from CSV file"""
+    return pd.read_csv('data/final/jobs.csv')
 
 def analyze_skills(df):
     """Analyze top skills"""
@@ -88,7 +86,7 @@ def create_visualizations(df):
     
     plt.tight_layout()
     plt.savefig('docs/job_analysis.png')
-    plt.show()
+    # plt.show()  # Commented out for headless environment
 
 def generate_report(df):
     """Generate analysis report"""
