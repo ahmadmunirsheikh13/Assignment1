@@ -1,0 +1,57 @@
+============================================================
+DATA SCIENCE & MACHINE LEARNING JOBS ANALYSIS REPORT
+============================================================
+Generated on: March 21, 2026
+Dataset: 17 jobs from data/final/jobs.csv
+Source: Spotify career pages (scraped via Scrapy)
+
+🔧 TOP SKILLS IN DEMAND:
+------------------------------
+  R: 17 jobs (100.0%)
+
+📍 TOP HIRING LOCATIONS:
+------------------------------
+  New York, NY: 8 jobs (47.1%)
+  London /: 3 jobs (17.6%)
+  Stockholm /: 3 jobs (17.6%)
+  New York, NY /: 2 jobs (11.8%)
+  Toronto: 1 jobs (5.9%)
+
+🎓 EXPERIENCE LEVEL ANALYSIS:
+------------------------------
+  Entry-level roles: 0 (0.0%)
+  Senior/Mid-level roles: 17 (100.0%)
+
+💼 JOB TITLE BREAKDOWN:
+------------------------------
+  Data Scientist: 6 positions
+  Senior Machine Learning Engineer: 3 positions
+  Machine Learning Engineering Manager: 2 positions
+  Data Scientist, Subscriptions: 1 positions
+  Senior Data Scientist: 1 positions
+  Senior Staff Machine Learning Engineer: 1 positions
+  Machine Learning Engineer: 1 positions
+  Machine Learning Engineer, Personalization: 1 positions
+  Data Scientist II: 1 positions
+
+🏢 COMPANY ANALYSIS:
+------------------------------
+  Spotify: 17 jobs (100.0%)
+
+⏰ EMPLOYMENT TYPE ANALYSIS:
+------------------------------
+  Permanent /: 15 positions
+  Full-time: 2 positions
+
+📈 KEY INSIGHTS:
+------------------------------
+• R programming is the most demanded skill across all positions
+• New York, NY is the top hiring location with 47% of all jobs
+• No entry-level positions found - all roles require experience
+• Data Scientist is the most common job title
+• All analyzed jobs are from Spotify
+• Most positions are permanent/full-time roles
+
+============================================================
+ANALYSIS COMPLETE - REPORT GENERATED
+============================================================

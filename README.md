@@ -55,7 +55,7 @@ This repository contains a web scraping project for collecting and analyzing job
 
 ## Results
 
-See `docs/report.md` for detailed analysis results. The final dataset is saved as `data/final/jobs.csv`.
+See `analysis/analysis_report.txt` and `analysis/business_insights.txt` for detailed analysis results. The final dataset is saved as `data/final/jobs.csv`.
 
 ## Git Workflow
 
