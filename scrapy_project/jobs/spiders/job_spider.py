@@ -12,8 +12,8 @@ class JobSpider(scrapy.Spider):
         print("Starting Job Spider - Reading job URLs from CSV...")
         print("="*60)
         
-        # Construct path relative to scrapy_project directory
-        csv_path = os.path.join(os.path.dirname(__file__), '../../data/raw/job_links.csv')
+        # Construct path relative to repository root
+        csv_path = os.path.join(os.path.dirname(__file__), '../../../data/raw/job_links.csv')
         csv_path = os.path.abspath(csv_path)
         
         print(f"CSV Path: {csv_path}")
