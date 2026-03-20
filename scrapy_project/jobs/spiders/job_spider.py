@@ -17,38 +17,119 @@ class JobSpider(scrapy.Spider):
         item = JobItem()
         item['job_url'] = response.url
         
-        # Extract job details - selectors will vary by platform
-        # These are generic selectors, may need customization per site
-        
-        # Job title
-        item['job_title'] = response.css('h1::text').get() or response.css('.job-title::text').get()
+        # Enhanced selectors for different platforms
+        # Job title - try multiple selectors
+        title_selectors = [
+            'h1::text',
+            '.job-title::text',
+            '.posting-title::text',
+            'h1.job-title::text',
+            '.job-header h1::text'
+        ]
+        item['job_title'] = self.extract_first_text(response, title_selectors)
         
         # Company name
-        item['company_name'] = response.css('.company-name::text').get() or response.css('meta[property="og:site_name"]::attr(content)').get()
+        company_selectors = [
+            '.company-name::text',
+            '.company::text',
+            'meta[property="og:site_name"]::attr(content)',
+            '.employer::text',
+            '.company-info::text'
+        ]
+        item['company_name'] = self.extract_first_text(response, company_selectors)
         
         # Location
-        item['location'] = response.css('.location::text').get() or response.css('[data-location]::text').get()
+        location_selectors = [
+            '.location::text',
+            '[data-location]::text',
+            '.job-location::text',
+            '.location-info::text',
+            '.workplace::text'
+        ]
+        item['location'] = self.extract_first_text(response, location_selectors)
         
         # Department
-        item['department'] = response.css('.department::text').get()
+        dept_selectors = [
+            '.department::text',
+            '.team::text',
+            '.group::text',
+            '[data-department]::text'
+        ]
+        item['department'] = self.extract_first_text(response, dept_selectors)
         
         # Employment type
-        item['employment_type'] = response.css('.employment-type::text').get() or response.css('[data-employment-type]::text').get()
+        type_selectors = [
+            '.employment-type::text',
+            '[data-employment-type]::text',
+            '.job-type::text',
+            '.commitment::text'
+        ]
+        item['employment_type'] = self.extract_first_text(response, type_selectors)
         
         # Posted date
-        item['posted_date'] = response.css('.posted-date::text').get() or response.css('time::attr(datetime)').get()
+        date_selectors = [
+            '.posted-date::text',
+            'time::attr(datetime)',
+            '.date::text',
+            '[data-date]::text'
+        ]
+        item['posted_date'] = self.extract_first_text(response, date_selectors)
         
         # Job description
-        item['job_description'] = ' '.join(response.css('.job-description p::text').getall()) or response.css('.job-description::text').get()
+        desc_selectors = [
+            '.job-description',
+            '.description',
+            '.job-detail',
+            '.posting-description'
+        ]
+        item['job_description'] = self.extract_description(response, desc_selectors)
         
         # Required skills
-        skills = response.css('.skills li::text').getall() or response.css('[data-skills] li::text').getall()
-        item['required_skills'] = ', '.join(skills)
+        skill_selectors = [
+            '.skills li::text',
+            '[data-skills] li::text',
+            '.requirements li::text',
+            '.qualifications li::text'
+        ]
+        skills = []
+        for selector in skill_selectors:
+            skills.extend(response.css(selector).getall())
+        item['required_skills'] = ', '.join(set(skills))  # Remove duplicates
         
         # Experience (optional)
-        item['experience'] = response.css('.experience::text').get()
+        exp_selectors = [
+            '.experience::text',
+            '.experience-level::text',
+            '[data-experience]::text'
+        ]
+        item['experience'] = self.extract_first_text(response, exp_selectors)
         
         # Salary (optional)
-        item['salary'] = response.css('.salary::text').get()
+        salary_selectors = [
+            '.salary::text',
+            '.compensation::text',
+            '[data-salary]::text'
+        ]
+        item['salary'] = self.extract_first_text(response, salary_selectors)
         
         yield item
+    
+    def extract_first_text(self, response, selectors):
+        """Extract text from first matching selector"""
+        for selector in selectors:
+            text = response.css(selector).get()
+            if text:
+                return text.strip()
+        return ''
+    
+    def extract_description(self, response, selectors):
+        """Extract and clean job description"""
+        for selector in selectors:
+            desc_parts = response.css(f'{selector} p::text').getall()
+            if desc_parts:
+                return ' '.join(desc_parts).strip()
+            # Fallback to direct text
+            desc = response.css(f'{selector}::text').get()
+            if desc:
+                return desc.strip()
+        return ''
