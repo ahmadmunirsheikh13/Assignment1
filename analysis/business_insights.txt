@@ -2,8 +2,8 @@
 BUSINESS INSIGHTS & TREND ANALYSIS REPORT
 ================================================================================
 Generated on: March 21, 2026
-Analysis based on: 17 Data Science & ML positions
-Source: Spotify career data (scraped and analyzed)
+Analysis based on: 14 Data Science & ML positions
+Source: Spotify career data (filtered and analyzed)
 
 📊 MARKET DEMAND ANALYSIS:
 ----------------------------------------
@@ -14,12 +14,12 @@ Source: Spotify career data (scraped and analyzed)
 
 🌍 GEOGRAPHIC MARKET INSIGHTS:
 ----------------------------------------
-• NEW YORK DOMINANCE: 47% of jobs concentrated in NYC
+• NEW YORK DOMINANCE: 2 jobs in NYC area (14.3%)
   → Strategic focus on East Coast tech hub
   → Higher cost of living, premium salaries expected
   → Access to top talent pool and industry networking
 
-• GLOBAL PRESENCE: London (18%) and Stockholm (18%) show international expansion
+• GLOBAL PRESENCE: London (1) and Stockholm (1) show international expansion
   → Multi-market strategy requiring diverse cultural adaptation
   → Time zone challenges for global collaboration
   → Local market expertise needed for each region
@@ -34,11 +34,11 @@ Source: Spotify career data (scraped and analyzed)
 
 💼 ROLE SPECIALIZATION INSIGHTS:
 ----------------------------------------
-• DATA SCIENTIST PREVALENCE: 6 positions (35.3%)
+• DATA SCIENTIST PREVALENCE: 5 positions (35.7%)
   → Core analytical role heavily emphasized
   → Focus on generalist data science capabilities
 
-• ML ENGINEERING EMPHASIS: 5 ML-focused positions
+• ML ENGINEERING EMPHASIS: 7 ML-focused positions
   → Strong investment in machine learning infrastructure
   → Need for production ML systems and MLOps
   → Balance between research (Data Science) and engineering (ML Engineering)

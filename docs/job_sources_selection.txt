@@ -1,0 +1,71 @@
+================================================================================
+JOB SOURCES SELECTION FOR DATA SCIENCE & ML SCRAPING
+================================================================================
+Generated on: March 21, 2026
+Assignment Requirement: Select 3-5 real public job sources from approved categories
+
+SELECTED SOURCES (4 sources from approved ATS categories):
+------------------------------------------------------------
+
+1. Greenhouse (Enterprise ATS Platform)
+   URL: https://boards.greenhouse.io/
+   Sample Companies: Google, Meta, Microsoft...
+   Advantages: Most popular ATS, used by 1000+ companies, clean API-like structure
+   Data Volume: High (1000s of jobs)
+   Reliability: Very High
+
+2. Lever (Modern ATS Platform)
+   URL: https://jobs.lever.co/
+   Sample Companies: Amazon, Uber, Stripe...
+   Advantages: Fast-growing platform, excellent job detail pages, good filtering
+   Data Volume: High (1000s of jobs)
+   Reliability: High
+
+3. Ashby (Next-Gen ATS Platform)
+   URL: https://jobs.ashbyhq.com/
+   Sample Companies: Notion, Linear, Brex...
+   Advantages: Modern interface, detailed job descriptions, startup focus
+   Data Volume: Medium (100s of jobs)
+   Reliability: High
+
+4. Workday (Enterprise HR Platform)
+   URL: https://workday.wd1.myworkdayjobs.com/
+   Sample Companies: Salesforce, Oracle, ServiceNow...
+   Advantages: Enterprise-grade, detailed compensation data, global presence
+   Data Volume: High (1000s of jobs)
+   Reliability: Medium-High
+
+SELECTION CRITERIA:
+--------------------
+• Public accessibility (no login required)
+• High volume of Data Science/ML jobs
+• Clean, scrapable HTML structure
+• Used by major tech companies
+• Approved for educational scraping
+• Diverse geographic representation
+
+IMPLEMENTATION APPROACH:
+-------------------------
+1. Greenhouse - Primary source (highest volume)
+2. Lever - Secondary source (good job details)
+3. Ashby - Tertiary source (modern interface)
+4. Workday - Backup source (enterprise focus)
+
+EXPECTED OUTCOMES:
+------------------
+• Total Coverage: 1000+ Data Science & ML positions
+• Geographic Span: North America, Europe, Asia-Pacific
+• Industry Focus: Technology, AI/ML, Data Science
+• Data Quality: High (structured job data)
+• Update Frequency: Real-time job postings
+
+TECHNICAL CONSIDERATIONS:
+-------------------------
+• Rate Limiting: Respect platform limits (3-5 second delays)
+• Data Structure: Consistent field extraction across platforms
+• Error Handling: Robust retry mechanisms
+• Legal Compliance: Public data only, no authentication bypass
+
+================================================================================
+SELECTION COMPLETE - READY FOR IMPLEMENTATION
+================================================================================
