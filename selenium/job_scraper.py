@@ -1,377 +1,344 @@
+"""
+Job Scraper - Selenium Automation Script
+Collects job listings from Greenhouse, Lever, and Ashby career pages.
+
+Platforms:
+- Greenhouse: boards.greenhouse.io (used by 500+ companies)
+- Lever: jobs.lever.co (ATS by Lever Hire)  
+- Ashby: jobs.ashbyhq.com (Modern ATS platform)
+
+Author: Ahmad Munir Sheikh
+Date: March 2026
+"""
+
 import os
-import time
 import csv
+import time
+import logging
+from typing import Set, List
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import (
+    TimeoutException,
+    NoSuchElementException,
+    StaleElementReferenceException
+)
 
-# List of career pages to scrape - using real company career pages (expanded for 100+ jobs)
-CAREER_PAGES = [
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - [%(levelname)s] %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Career pages from real companies using each platform
+GREENHOUSE_PAGES = [
     "https://boards.greenhouse.io/google",
     "https://boards.greenhouse.io/meta",
     "https://boards.greenhouse.io/microsoft",
-    "https://boards.greenhouse.io/apple",
-    "https://boards.greenhouse.io/amazon",
-    "https://boards.greenhouse.io/netflix",
+    "https://boards.greenhouse.io/stripe", 
+    "https://boards.greenhouse.io/epic",
+]
+
+LEVER_PAGES = [
     "https://jobs.lever.co/amazon",
     "https://jobs.lever.co/netflix",
     "https://jobs.lever.co/spotify",
     "https://jobs.lever.co/uber",
-    "https://jobs.lever.co/airbnb",
+    "https://jobs.lever.co/databricks",
+]
+
+ASHBY_PAGES = [
     "https://jobs.ashbyhq.com/stripe",
-    "https://jobs.ashbyhq.com/airbnb",
+    "https://jobs.ashbyhq.com/shopify",
     "https://jobs.ashbyhq.com/coinbase",
-    "https://jobs.ashbyhq.com/shopify"
+    "https://jobs.ashbyhq.com/retool",
 ]
 
-# Keywords to filter jobs (expanded for comprehensive collection)
-KEYWORDS = [
-    "Data Science", "Machine Learning", "Data Scientist", "ML Engineer",
-    "Data Analyst", "AI Engineer", "Machine Learning Engineer", "Data Engineer",
-    "Research Scientist", "Applied Scientist", "Principal Data Scientist",
-    "Senior Data Scientist", "Lead Data Scientist", "Data Science Manager",
-    "ML Research", "Deep Learning", "Computer Vision", "NLP", "Natural Language Processing"
-]
-
-def setup_driver():
-    """Setup Chrome WebDriver"""
-    from selenium.webdriver.chrome.service import Service
-    from webdriver_manager.chrome import ChromeDriverManager
-
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')  # Run in headless mode
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--window-size=1920,1080')
-
-    # Use WebDriverManager to automatically manage ChromeDriver
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
+def setup_chrome_driver(headless=True):
+    """Setup Chrome WebDriver with proper options"""
+    options = Options()
+    
+    if headless:
+        options.add_argument("--headless")
+    
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-plugins")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+    
+    driver = webdriver.Chrome(options=options)
+    driver.set_page_load_timeout(20)
+    driver.implicitly_wait(10)
+    
     return driver
 
-def search_jobs_greenhouse(driver, url):
-    """Search jobs on Greenhouse boards"""
-    job_links = []
-    try:
-        print(f"Visiting Greenhouse page: {url}")
-        driver.get(url)
-        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
 
-        # Wait for job items to appear (or any hint on the page)
-        print("Looking for job listings...")
+class GreenhouseJobScraper:
+    """Scraper for Greenhouse career boards"""
+    
+    def __init__(self, driver):
+        self.driver = driver
+        self.wait = WebDriverWait(driver, 15)
+    
+    def scrape(self, url):
+        """Scrape jobs from a Greenhouse board"""
+        logger.info(f"🌿 Scraping Greenhouse: {url}")
+        
         try:
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.opening, .job-post, [data-jobid]'))
-            )
-        except Exception:
-            pass
-
-            # Try multiple approaches to find jobs
-            job_elements = []
-
-            # Method 1: Look for common Greenhouse job selectors
-            selectors_to_try = [
-                ".job-post, .opening",
-                "[data-jobid]",
-                ".job-link",
-                ".posting",
-                ".job-title",
-                "a[href*='/jobs/']",
-                ".career a",
-                ".position"
-            ]
-
-            for selector in selectors_to_try:
+            self.driver.get(url)
+            time.sleep(2)
+            
+            # Get all job postings
+            try:
+                # Greenhouse typically uses this structure
+                job_elements = self.wait.until(
+                    EC.presence_of_all_elements_located(
+                        (By.CSS_SELECTOR, ".opening, .job-post, .job-item, [data-req-id]")
+                    )
+                )
+            except TimeoutException:
+                logger.warning(f"  ⚠️ Jobs not loaded after waiting, trying scroll")
+                self._scroll_to_bottom()
+                job_elements = self.driver.find_elements(By.CSS_SELECTOR, ".opening, .job-post, .job-item, [data-req-id]")
+            
+            logger.info(f"  Found {len(job_elements)} job elements")
+            
+            # Extract job URLs
+            job_urls = set()
+            for element in job_elements:
                 try:
-                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                    if elements:
-                        print(f"Found {len(elements)} elements with selector '{selector}'")
-                        job_elements.extend(elements)
-                except:
+                    # Try to find link in element
+                    link = element.find_element(By.TAG_NAME, "a")
+                    href = link.get_attribute("href")
+                    
+                    if href and href not in job_urls:
+                        # Make absolute URL if not already
+                        if not href.startswith("http"):
+                            href = "https://boards.greenhouse.io" + href
+                        
+                        job_urls.add(href)
+                        logger.debug(f"  ✓ Collected: {href[:80]}...")
+                
+                except NoSuchElementException:
                     continue
-
-            # Method 2: If no jobs found, try scrolling and searching
-            if not job_elements:
-                print("No jobs found initially, trying search...")
-                try:
-                    # Look for search box
-                    search_box = driver.find_element(By.CSS_SELECTOR, "input[type='search'], input[name='q'], input[placeholder*='search']")
-                    search_box.clear()
-                    search_box.send_keys("data scientist")
-                    search_box.send_keys(Keys.RETURN)
-                    time.sleep(3)
-
-                    # Try selectors again after search
-                    for selector in selectors_to_try:
-                        try:
-                            elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                            if elements:
-                                job_elements.extend(elements)
-                        except:
-                            continue
-                except:
-                    print("Search functionality not found")
-
-            # Extract links from found elements
-            for elem in job_elements:
-                try:
-                    # Get link
-                    if elem.tag_name == 'a':
-                        href = elem.get_attribute('href')
-                        title = elem.text.strip()
-                    else:
-                        # Look for link inside the element
-                        link_elem = elem.find_element(By.TAG_NAME, 'a')
-                        href = link_elem.get_attribute('href')
-                        title = link_elem.text.strip() or elem.text.strip()
-
-                    if href and title:
-                        # Check if it's a data science related job
-                        title_lower = title.lower()
-                        if any(keyword.lower() in title_lower for keyword in KEYWORDS):
-                            if href not in job_links:  # Avoid duplicates
-                                job_links.append(href)
-                                print(f"✓ Found job: {title[:60]}...")
-
-                except Exception as e:
-                    continue
-
-            print(f"Total Data Science jobs found on Greenhouse: {len(job_links)}")
-
+            
+            logger.info(f"  ✅ Collected {len(job_urls)} unique job URLs")
+            return list(job_urls)
+            
         except Exception as e:
-            print(f"Error during job search: {e}")
+            logger.error(f"  ❌ Error scraping Greenhouse: {str(e)[:100]}")
+            return []
+    
+    def _scroll_to_bottom(self):
+        """Scroll to load all jobs"""
+        for _ in range(5):
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(1)
 
-    except Exception as e:
-        print(f"Error scraping Greenhouse: {e}")
 
-    return job_links
-
-def search_jobs_lever(driver, url):
-    """Search jobs on Lever"""
-    job_links = []
-    try:
-        print(f"Visiting Lever page: {url}")
-        driver.get(url)
-        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
-
-        # Wait for job listings blocks to appear
-        print("Looking for job listings...")
+class LeverJobScraper:
+    """Scraper for Lever job boards"""
+    
+    def __init__(self, driver):
+        self.driver = driver
+        self.wait = WebDriverWait(driver, 15)
+    
+    def scrape(self, url):
+        """Scrape jobs from a Lever board"""
+        logger.info(f"🎯 Scraping Lever: {url}")
+        
         try:
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.posting, .posting-title, a[href*="/apply/"]'))
+            self.driver.get(url)
+            time.sleep(2)
+            
+            # Load all jobs by scrolling
+            self._scroll_to_bottom()
+            
+            # Lever uses posting divs or links
+            job_elements = self.driver.find_elements(
+                By.CSS_SELECTOR, ".posting, .posting-title, .posting-link, [data-job-id]"
             )
-        except Exception:
-            pass
-
-            # Try multiple approaches to find jobs
-            job_elements = []
-
-            # Method 1: Look for common Lever job selectors
-            selectors_to_try = [
-                ".posting",
-                ".posting-title",
-                ".job-title",
-                "[data-job-id]",
-                "a[href*='/apply/']",
-                ".lever-job",
-                ".position"
-            ]
-
-            for selector in selectors_to_try:
+            
+            logger.info(f"  Found {len(job_elements)} job elements")
+            
+            job_urls = set()
+            for element in job_elements:
                 try:
-                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                    if elements:
-                        print(f"Found {len(elements)} elements with selector '{selector}'")
-                        job_elements.extend(elements)
+                    # Different approaches for Lever
+                    link = element.find_element(By.TAG_NAME, "a")
+                    href = link.get_attribute("href")
+                    
+                    if href and "lever.co" in href:
+                        if href not in job_urls:
+                            job_urls.add(href)
+                            logger.debug(f"  ✓ Collected: {href[:80]}...")
                 except:
                     continue
-
-            # Method 2: If no jobs found, try scrolling
-            if not job_elements:
-                print("No jobs found initially, trying scrolling...")
-                for i in range(10):
-                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                    time.sleep(1)
-
-                    # Check for new jobs after scrolling
-                    for selector in selectors_to_try:
-                        try:
-                            elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                            if elements:
-                                job_elements.extend(elements)
-                        except:
-                            continue
-
-                    if job_elements:
-                        break
-
-            # Extract links from found elements
-            for elem in job_elements:
-                try:
-                    # Get link
-                    if elem.tag_name == 'a':
-                        href = elem.get_attribute('href')
-                        title = elem.text.strip()
-                    else:
-                        # Look for link inside the element
-                        link_elem = elem.find_element(By.TAG_NAME, 'a')
-                        href = link_elem.get_attribute('href')
-                        title = link_elem.text.strip() or elem.text.strip()
-
-                    if href and title:
-                        # Check if it's a data science related job
-                        title_lower = title.lower()
-                        if any(keyword.lower() in title_lower for keyword in KEYWORDS):
-                            if href not in job_links:  # Avoid duplicates
-                                job_links.append(href)
-                                print(f"✓ Found job: {title[:60]}...")
-
-                except Exception as e:
-                    continue
-
-            print(f"Total Data Science jobs found on Lever: {len(job_links)}")
-
+            
+            logger.info(f"  ✅ Collected {len(job_urls)} unique job URLs")
+            return list(job_urls)
+            
         except Exception as e:
-            print(f"Error during job search: {e}")
+            logger.error(f"  ❌ Error scraping Lever: {str(e)[:100]}")
+            return []
+    
+    def _scroll_to_bottom(self):
+        """Scroll to load all jobs"""
+        for _ in range(5):
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(1)
 
-    except Exception as e:
-        print(f"Error scraping Lever: {e}")
 
-    return job_links
-
-def search_jobs_ashby(driver, url):
-    """Search jobs on Ashby"""
-    job_links = []
-    try:
-        print(f"Visiting Ashby page: {url}")
-        driver.get(url)
-        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
-
-        # Wait for job entries to appear
-        print("Looking for job listings...")
+class AshbyJobScraper:
+    """Scraper for Ashby job boards"""
+    
+    def __init__(self, driver):
+        self.driver = driver
+        self.wait = WebDriverWait(driver, 15)
+    
+    def scrape(self, url):
+        """Scrape jobs from an Ashby board"""
+        logger.info(f"🏢 Scraping Ashby: {url}")
+        
         try:
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.job-post, .posting, [data-job]'))
+            self.driver.get(url)
+            time.sleep(2)
+            
+            # Load all jobs
+            self._scroll_to_bottom()
+            
+            # Ashby job selectors
+            job_elements = self.driver.find_elements(
+                By.CSS_SELECTOR, "[data-job], .job-title, .job-posting, .posting"
             )
-        except Exception:
-            pass
-
-            # Try multiple approaches to find jobs
-            job_elements = []
-
-            # Method 1: Look for common Ashby job selectors
-            selectors_to_try = [
-                ".job-post",
-                ".posting",
-                "[data-job]",
-                ".job-title",
-                "a[href*='/job/']",
-                ".ashby-job",
-                ".position"
-            ]
-
-            for selector in selectors_to_try:
+            
+            logger.info(f"  Found {len(job_elements)} job elements")
+            
+            job_urls = set()
+            for element in job_elements:
                 try:
-                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                    if elements:
-                        print(f"Found {len(elements)} elements with selector '{selector}'")
-                        job_elements.extend(elements)
+                    # Get link from element
+                    try:
+                        link = element.find_element(By.TAG_NAME, "a")
+                        href = link.get_attribute("href")
+                    except:
+                        # Element might be the link itself
+                        href = element.get_attribute("href")
+                    
+                    if href and "ashby" in href.lower():
+                        if href not in job_urls:
+                            job_urls.add(href)
+                            logger.debug(f"  ✓ Collected: {href[:80]}...")
                 except:
                     continue
-
-            # Method 2: If no jobs found, try scrolling
-            if not job_elements:
-                print("No jobs found initially, trying scrolling...")
-                for i in range(10):
-                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                    time.sleep(1)
-
-                    # Check for new jobs after scrolling
-                    for selector in selectors_to_try:
-                        try:
-                            elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                            if elements:
-                                job_elements.extend(elements)
-                        except:
-                            continue
-
-                    if job_elements:
-                        break
-
-            # Extract links from found elements
-            for elem in job_elements:
-                try:
-                    # Get link
-                    if elem.tag_name == 'a':
-                        href = elem.get_attribute('href')
-                        title = elem.text.strip()
-                    else:
-                        # Look for link inside the element
-                        link_elem = elem.find_element(By.TAG_NAME, 'a')
-                        href = link_elem.get_attribute('href')
-                        title = link_elem.text.strip() or elem.text.strip()
-
-                    if href and title:
-                        # Check if it's a data science related job
-                        title_lower = title.lower()
-                        if any(keyword.lower() in title_lower for keyword in KEYWORDS):
-                            if href not in job_links:  # Avoid duplicates
-                                job_links.append(href)
-                                print(f"✓ Found job: {title[:60]}...")
-
-                except Exception as e:
-                    continue
-
-            print(f"Total Data Science jobs found on Ashby: {len(job_links)}")
-
+            
+            logger.info(f"  ✅ Collected {len(job_urls)} unique job URLs")
+            return list(job_urls)
+            
         except Exception as e:
-            print(f"Error during job search: {e}")
+            logger.error(f"  ❌ Error scraping Ashby: {str(e)[:100]}")
+            return []
+    
+    def _scroll_to_bottom(self):
+        """Scroll to load all jobs"""
+        for _ in range(5):
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(1)
 
-    except Exception as e:
-        print(f"Error scraping Ashby: {e}")
-
-    return job_links
 
 def main():
-    driver = setup_driver()
-    all_job_links = []
+    """Main execution"""
+    logger.info("=" * 80)
+    logger.info("🚀 JOB SCRAPING AUTOMATION STARTED")
+    logger.info("=" * 80)
+    
+    driver = setup_chrome_driver(headless=False)
+    all_job_links = set()
     
     try:
-        for page in CAREER_PAGES:
-            print(f"\n🔍 Scraping {page}")
-            if "greenhouse" in page:
-                links = search_jobs_greenhouse(driver, page)
-            elif "lever" in page:
-                links = search_jobs_lever(driver, page)
-            elif "ashby" in page:
-                links = search_jobs_ashby(driver, page)
-            else:
-                continue
-            
-            all_job_links.extend(links)
-            print(f"📊 Total jobs collected so far: {len(all_job_links)}")
-            time.sleep(1)  # Shorter delay for efficiency
-    
+        # ===== GREENHOUSE SCRAPING =====
+        logger.info("\n📍 PHASE 1: GREENHOUSE BOARDS")
+        logger.info("-" * 80)
+        gh_scraper = GreenhouseJobScraper(driver)
+        
+        for url in GREENHOUSE_PAGES:
+            links = gh_scraper.scrape(url)
+            all_job_links.update(links)
+            time.sleep(1)  # Polite delay
+        
+        logger.info(f"Greenhouse subtotal: {len(all_job_links)} unique jobs\n")
+        
+        # ===== LEVER SCRAPING =====
+        logger.info("📍 PHASE 2: LEVER JOB BOARDS")
+        logger.info("-" * 80)
+        lever_scraper = LeverJobScraper(driver)
+        
+        for url in LEVER_PAGES:
+            links = lever_scraper.scrape(url)
+            all_job_links.update(links)
+            time.sleep(1)  # Polite delay
+        
+        logger.info(f"Total after Lever: {len(all_job_links)} unique jobs\n")
+        
+        # ===== ASHBY SCRAPING =====
+        logger.info("📍 PHASE 3: ASHBY JOB BOARDS")
+        logger.info("-" * 80)
+        ashby_scraper = AshbyJobScraper(driver)
+        
+        for url in ASHBY_PAGES:
+            links = ashby_scraper.scrape(url)
+            all_job_links.update(links)
+            time.sleep(1)  # Polite delay
+        
+        logger.info(f"Grand total: {len(all_job_links)} unique jobs\n")
+        
+    except Exception as e:
+        logger.error(f"❌ Fatal error during scraping: {e}")
     finally:
         driver.quit()
+        logger.info("Browser closed")
     
-    # Remove duplicates
-    all_job_links = list(set(all_job_links))
+    # ===== SAVE RESULTS =====
+    logger.info("\n" + "=" * 80)
+    logger.info("💾 SAVING RESULTS")
+    logger.info("=" * 80)
     
-    # Save to CSV
-    os.makedirs('data/raw', exist_ok=True)
-    with open('data/raw/job_links.csv', 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(['job_url'])
-        for link in all_job_links:
-            writer.writerow([link])
+    all_job_links = list(all_job_links)
     
-    print(f"\n✅ SUCCESS: Collected {len(all_job_links)} unique Data Science/ML job links!")
-    print("📁 Saved to data/raw/job_links.csv")
+    # Create directory if needed
+    os.makedirs("data/raw", exist_ok=True)
+    
+    # Write to CSV
+    csv_path = "data/raw/job_links.csv"
+    try:
+        with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['job_url'])
+            for link in all_job_links:
+                writer.writerow([link])
+        
+        file_size_kb = os.path.getsize(csv_path) / 1024
+        logger.info(f"✅ SUCCESS: Saved {len(all_job_links)} job URLs")
+        logger.info(f"   File: {csv_path}")
+        logger.info(f"   Size: {file_size_kb:.1f} KB")
+        
+    except Exception as e:
+        logger.error(f"❌ Error saving CSV: {e}")
+    
+    logger.info("\n" + "=" * 80)
+    logger.info("✨ SCRAPING COMPLETE")
+    logger.info(f"   Unique job URLs: {len(all_job_links)}")
+    logger.info(f"   Next: Run Scrapy spider to extract job details")
+    logger.info("=" * 80 + "\n")
+
 
 if __name__ == "__main__":
     main()
