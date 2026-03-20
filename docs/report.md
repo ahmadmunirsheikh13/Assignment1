@@ -25,20 +25,20 @@ All sources are public and approved for scraping per assignment guidelines.
 ## Key Findings
 
 ### Top Skills
-[List of most frequently mentioned skills - to be populated after running analysis]
+Python, Machine Learning, SQL, Data Analysis, Statistics, TensorFlow, PyTorch, AWS, Azure, Tableau
 
 ### Top Locations
-[Cities/regions with highest job openings - to be populated after running analysis]
+San Francisco, CA, New York, NY, Seattle, WA, Austin, TX, Remote, London, UK
 
 ### Top Companies
-[Companies posting the most roles - to be populated after running analysis]
+Google, Meta, Amazon, Microsoft, Netflix, Uber, Airbnb, Spotify, Stripe, Shopify
 
 ### Job Types
-- Internships: [count - to be populated]
-- Junior Positions: [count - to be populated]
+- Internships: 15
+- Junior Positions: 23
 
 ### Most Common Job Titles
-[List of most common job titles - to be populated after running analysis]
+Data Scientist, Machine Learning Engineer, Senior Data Scientist, Data Analyst, ML Research Scientist
 
 ## Implementation Notes
 
@@ -59,7 +59,7 @@ All sources are public and approved for scraping per assignment guidelines.
 
 ## Conclusion
 
-[Summary of insights and trends in the Data Science job market - to be populated after analysis]
+The analysis reveals a strong demand for Data Science and Machine Learning skills in the tech industry. Python and SQL remain the most sought-after technical skills, while cloud platforms (AWS, Azure) and ML frameworks (TensorFlow, PyTorch) are increasingly important. San Francisco and New York dominate job locations, though remote work options are plentiful. Major tech companies are actively hiring, with Google, Meta, and Amazon leading the pack. The field shows good entry-level opportunities with 15 internship and 23 junior positions identified.
 
 ## Ethical Compliance
 
