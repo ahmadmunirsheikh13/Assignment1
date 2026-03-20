@@ -158,22 +158,13 @@ class JobSpider(scrapy.Spider):
         ]
         item['salary'] = self.extract_first_text(response, salary_selectors) or 'Not specified'
         
-        # FILTER: Only yield jobs related to "Data Science" or "Machine Learning"
-        job_title_lower = item['job_title'].lower()
-        job_desc_lower = item['job_description'].lower()
-        skills_lower = item['required_skills'].lower()
+        # Log extracted data
+        print(f"  ✓ Title: {item['job_title']}")
+        print(f"  ✓ Company: {item['company_name']}")
+        print(f"  ✓ Location: {item['location']}")
+        print(f"  ✓ Skills: {item['required_skills'][:80]}...")
         
-        keywords = ['data science', 'machine learning', 'ml', 'data scientist', 'ml engineer']
-        is_relevant = any(keyword in job_title_lower or keyword in job_desc_lower or keyword in skills_lower 
-                         for keyword in keywords)
-        
-        if is_relevant:
-            print(f"  ✓ Title: {item['job_title']}")
-            print(f"  ✓ Company: {item['company_name']}")
-            print(f"  ✓ Relevant job detected and will be saved")
-            yield item
-        else:
-            print(f"  ✗ Filtered out: {item['job_title']} (not Data Science/ML related)")
+        yield item
     
     def extract_first_text(self, response, selectors):
         """Extract text from first matching selector"""
@@ -206,15 +197,16 @@ class JobSpider(scrapy.Spider):
         keywords = [
             'python', 'sql', 'r', 'tensorflow', 'pytorch', 'scikit-learn', 'keras',
             'spark', 'hadoop', 'airflow', 'docker', 'kubernetes', 'pandas', 'numpy',
-            'matplotlib', 'seaborn', 'nlp', 'computer vision', 'aws', 'gcp', 'azure'
+            'matplotlib', 'seaborn', 'nlp', 'computer vision', 'aws', 'gcp', 'azure',
+            'javascript', 'java', 'golang', 'rust', 'c++', 'react', 'vue', 'angular',
+            'node.js', 'django', 'flask', 'fastapi', 'rest', 'graphql', 'git',
+            'shell', 'linux', 'windows', 'macos', 'mac',
         ]
 
         found = set()
         desc_lower = description.lower()
         for key in keywords:
             if key in desc_lower:
-                found.add(key)
+                found.add(key.lower())
 
         return list(found)
-
-        return ''

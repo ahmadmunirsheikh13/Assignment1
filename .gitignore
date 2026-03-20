@@ -23,6 +23,5 @@ coverage.xml
 node_modules/
 selenium/chromedriver
 selenium/geckodriver
-/data/raw/
 .env
 *.tmp
