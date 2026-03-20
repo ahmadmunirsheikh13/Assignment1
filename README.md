@@ -136,18 +136,21 @@ The final `jobs.csv` includes:
 
 ## 🔍 Analysis Outputs
 
-Latest analysis (2026-03-21) across 20 job listings:
+Latest analysis (2026-03-21) across 17 job listings:
 
 ### Top In-Demand Skills
-1. **Python** - 17 positions
-2. **SQL** - 8 positions  
-3. **Java** - 7 positions
-4. **Go** - 5 positions
-5. **Databases** - 5 positions
+1. **Python** - 12 positions
+2. **SQL** - 7 positions  
+3. **Go** - 5 positions
+4. **Java** - 5 positions
+5. **Microservices** - 5 positions
 
 ### Geographic Distribution
-- **San Francisco CA**: 8 jobs (40%)
-- **Mountain View CA**: 2 jobs
+- **San Francisco CA**: 10 jobs (59%)
+- **Stockholm Sweden**: 3 jobs (18%)
+- **Los Gatos CA**: 1 job
+- **Toronto Canada**: 1 job
+- **Cupertino CA**: 1 job
 - **Menlo Park CA**: 2 jobs
 - **Other locations**: 8 jobs
 
